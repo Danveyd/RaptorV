@@ -1,10 +1,14 @@
 package com.danvexteam.raptorv
 
-object RaptorNative {
-    init {
-        System.loadLibrary("raptorv")
-    }
+import android.content.res.AssetManager
+import android.view.Surface
 
-    external fun initEngine()
+object RaptorNative {
+    init { System.loadLibrary("raptorv") }
+
+    external fun initEngine(assetManager: AssetManager)
+
     external fun updateEngine(deltaTime: Float)
+    external fun onSurfaceCreated(surface: Surface)
+    external fun onSurfaceDestroyed()
 }
