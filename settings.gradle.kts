@@ -20,4 +20,5 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "RaptorV"
-include(":app")
+include(":raptorv")
+include(":sandbox")
