@@ -1,5 +1,5 @@
 #pragma once
-#include <math/vec3.h> // Filament math
+#include <math/vec3.h>
 #include <vector>
 
 namespace JPH {

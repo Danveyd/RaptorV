@@ -41,8 +41,6 @@ void RaptorEngine::update(float deltaTime) {
     m_Renderer->endFrame();
 }
 
-// ECS
-
 uint32_t RaptorEngine::createEntity(const std::string& name) {
     raptor::Entity entity = m_ActiveScene->createEntity(name);
     return static_cast<uint32_t>(entity.getHandle());

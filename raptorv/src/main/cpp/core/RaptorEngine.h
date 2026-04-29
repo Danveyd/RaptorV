@@ -26,7 +26,6 @@ public:
     void onSurfaceChanged(int width, int height);
     void onSurfaceDestroyed();
 
-    // ECS API
     uint32_t createEntity(const std::string& name);
     void destroyEntity(uint32_t entityId);
     void setPosition(uint32_t entityId, float x, float y, float z);
@@ -46,7 +45,6 @@ private:
     std::unique_ptr<raptor::Scene> m_ActiveScene;
     AAssetManager* m_AssetManager = nullptr;
 
-    // GLTF
     utils::NameComponentManager* m_NameManager = nullptr;
     filament::gltfio::MaterialProvider* m_MaterialProvider = nullptr;
     filament::gltfio::AssetLoader* m_AssetLoader = nullptr;

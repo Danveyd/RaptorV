@@ -95,4 +95,4 @@ namespace raptor {
     void Renderer::endFrame() {
     }
 
-} // namespace raptor
+}
