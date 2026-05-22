@@ -7,6 +7,8 @@ import com.danvexteam.raptorv.types.Vec3
 
 class Entity internal constructor(private val scene: Scene, val id: Long) {
 
+    private val scripts = mutableListOf<Component>()
+
     var transform: Transform
         get() = Transform(rotation = getRotation())
         set(t) {
@@ -15,6 +17,30 @@ class Entity internal constructor(private val scene: Scene, val id: Long) {
                 t.rotation.x, t.rotation.y, t.rotation.z,
                 t.scale.x, t.scale.y, t.scale.z)
         }
+
+    val material: Material by lazy {
+        Material(scene.handle, id)
+    }
+
+    fun <T : Component> addScript(script: T): T {
+        script.entity = this
+        scripts.add(script)
+        script.onCreate()
+        return script
+    }
+
+    internal fun updateScripts(deltaTime: Float) {
+        for (i in scripts.indices) {
+            scripts[i].onUpdate(deltaTime)
+        }
+    }
+
+    internal fun destroy() {
+        for (i in scripts.indices) {
+            scripts[i].onDestroy()
+        }
+        scripts.clear()
+    }
 
     fun setTransformRaw(px: Float, py: Float, pz: Float,
                         rx: Float, ry: Float, rz: Float,

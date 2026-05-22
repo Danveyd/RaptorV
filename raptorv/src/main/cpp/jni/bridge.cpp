@@ -2,6 +2,10 @@
 #include "raptor/Engine.h"
 #include "../src/platform/android/AndroidFileSystem.h"
 #include "../src/platform/android/AndroidWindow.h"
+#include "scene/SceneImpl.h"
+#include "resources/ResourceManagerImpl.h"
+#include <filament/RenderableManager.h>
+#include <filament/MaterialInstance.h>
 #include <android/native_window_jni.h>
 #include <android/asset_manager_jni.h>
 #include <memory>
@@ -235,6 +239,92 @@ Java_com_danvexteam_raptorv_internal_RaptorNative_updateLight(JNIEnv* env, jclas
     desc.falloffRadius = falloff;
     desc.castShadows = shadows;
     wrapper->engine->getRenderer()->updateLight(static_cast<EntityId>(lightId), desc);
+}
+
+JNIEXPORT void JNICALL
+Java_com_danvexteam_raptorv_internal_RaptorNative_setMaterialParamFloat(
+        JNIEnv* env, jclass, jlong sceneHandle, jlong entityId, jstring name, jfloat value) {
+
+    auto* scenePtr = reinterpret_cast<std::shared_ptr<SceneImpl>*>(sceneHandle);
+    if (!scenePtr || !*scenePtr) return;
+
+    entt::entity e = unpackEntity(static_cast<EntityId>(entityId));
+    auto& reg = (*scenePtr)->registry();
+    if (!reg.valid(e)) return;
+
+    auto* mc = reg.try_get<components::MeshC>(e);
+    if (!mc || mc->meshHandle == INVALID_MESH) return;
+
+    auto* asset = ResourceManagerImpl::getAsset(mc->meshHandle);
+    if (!asset) return;
+
+    filament::Engine* fEngine = (*scenePtr)->filamentEngine();
+    if (!fEngine) return;
+
+    auto& rcm = fEngine->getRenderableManager();
+    const char* cName = env->GetStringUTFChars(name, nullptr);
+
+    const utils::Entity* renderableEntities = asset->getRenderableEntities();
+    size_t count = asset->getRenderableEntityCount();
+
+    for (size_t i = 0; i < count; ++i) {
+        utils::Entity ent = renderableEntities[i];
+        auto instance = rcm.getInstance(ent);
+        if (instance) {
+            size_t primCount = rcm.getPrimitiveCount(instance);
+            for (size_t p = 0; p < primCount; ++p) {
+                filament::MaterialInstance* mi = rcm.getMaterialInstanceAt(instance, p);
+                if (mi) {
+                    mi->setParameter(cName, value);
+                }
+            }
+        }
+    }
+
+    env->ReleaseStringUTFChars(name, cName);
+}
+
+JNIEXPORT void JNICALL
+Java_com_danvexteam_raptorv_internal_RaptorNative_setMaterialParamColor(
+        JNIEnv* env, jclass, jlong sceneHandle, jlong entityId, jstring name, jfloat r, jfloat g, jfloat b) {
+
+    auto* scenePtr = reinterpret_cast<std::shared_ptr<SceneImpl>*>(sceneHandle);
+    if (!scenePtr || !*scenePtr) return;
+
+    entt::entity e = unpackEntity(static_cast<EntityId>(entityId));
+    auto& reg = (*scenePtr)->registry();
+    if (!reg.valid(e)) return;
+
+    auto* mc = reg.try_get<components::MeshC>(e);
+    if (!mc || mc->meshHandle == INVALID_MESH) return;
+
+    auto* asset = ResourceManagerImpl::getAsset(mc->meshHandle);
+    if (!asset) return;
+
+    filament::Engine* fEngine = (*scenePtr)->filamentEngine();
+    if (!fEngine) return;
+
+    auto& rcm = fEngine->getRenderableManager();
+    const char* cName = env->GetStringUTFChars(name, nullptr);
+
+    const utils::Entity* renderableEntities = asset->getRenderableEntities();
+    size_t count = asset->getRenderableEntityCount();
+
+    for (size_t i = 0; i < count; ++i) {
+        utils::Entity ent = renderableEntities[i];
+        auto instance = rcm.getInstance(ent);
+        if (instance) {
+            size_t primCount = rcm.getPrimitiveCount(instance);
+            for (size_t p = 0; p < primCount; ++p) {
+                filament::MaterialInstance* mi = rcm.getMaterialInstanceAt(instance, p);
+                if (mi) {
+                    mi->setParameter(cName, filament::math::float3{r, g, b});
+                }
+            }
+        }
+    }
+
+    env->ReleaseStringUTFChars(name, cName);
 }
 
 } // extern "C"

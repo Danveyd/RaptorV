@@ -9,9 +9,12 @@ import com.danvexteam.raptorv.types.RenderSettings
 class Engine(context: Context) : AutoCloseable {
     internal val handle: Long = RaptorNative.createEngine(context.assets)
 
+    private var activeScene: Scene? = null
+
     fun createScene(): Scene = Scene(this, RaptorNative.createScene(handle))
 
     fun setActiveScene(scene: Scene) {
+        activeScene = scene
         RaptorNative.setActiveScene(handle, scene.handle)
     }
 
@@ -48,7 +51,10 @@ class Engine(context: Context) : AutoCloseable {
         return Light(this, id)
     }
 
-    internal fun tick(dt: Float) = RaptorNative.tick(handle, dt)
+    internal fun tick(dt: Float) {
+        activeScene?.update(dt)
+        RaptorNative.tick(handle, dt)
+    }
 
     override fun close() {
         RaptorNative.destroyEngine(handle)

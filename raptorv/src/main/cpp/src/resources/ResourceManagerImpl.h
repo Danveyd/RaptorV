@@ -24,6 +24,7 @@ namespace raptor {
 
         static utils::Entity rootFromHandle(MeshHandle h);
         static void addAssetToScene(MeshHandle h, filament::Scene* scene);
+        static filament::gltfio::FilamentAsset* getAsset(MeshHandle h);
 
     private:
         filament::Engine*                       m_Engine;

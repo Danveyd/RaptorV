@@ -97,4 +97,11 @@ namespace raptor {
             scene->addEntities(it->second.asset->getEntities(), it->second.asset->getEntityCount());
         }
     }
+
+    filament::gltfio::FilamentAsset* ResourceManagerImpl::getAsset(MeshHandle h) {
+        if (!g_Instance) return nullptr;
+        auto it = g_Instance->m_Meshes.find(h);
+        if (it == g_Instance->m_Meshes.end()) return nullptr;
+        return it->second.asset;
+    }
 }

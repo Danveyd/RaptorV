@@ -25,6 +25,9 @@ internal object RaptorNative {
     @JvmStatic external fun attachMesh(sceneHandle: Long, entityId: Long, meshHandle: Long)
     @JvmStatic external fun attachRigidBody(sceneHandle: Long, entityId: Long, hx: Float, hy: Float, hz: Float, mass: Float)
 
+    @JvmStatic external fun setMaterialParamFloat(sceneHandle: Long, entityId: Long, name: String, value: Float)
+    @JvmStatic external fun setMaterialParamColor(sceneHandle: Long, entityId: Long, name: String, r: Float, g: Float, b: Float)
+
     @JvmStatic external fun createCamera(engineHandle: Long, fov: Float, near: Float, far: Float,
                                          px: Float, py: Float, pz: Float, tx: Float, ty: Float, tz: Float,
                                          ux: Float, uy: Float, uz: Float): Long

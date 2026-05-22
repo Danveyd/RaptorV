@@ -15,6 +15,7 @@ namespace raptor::components {
 
     struct MeshC {
         utils::Entity rootEntity;
+        MeshHandle meshHandle = INVALID_MESH;
     };
 
     struct RigidBodyC {

@@ -57,7 +57,7 @@ namespace raptor {
         entt::entity e = unpackEntity(id);
         if (!m_Registry.valid(e)) return;
 
-        m_Registry.emplace_or_replace<components::MeshC>(e, components::MeshC{root});
+        m_Registry.emplace_or_replace<components::MeshC>(e, components::MeshC{root, mesh});
 
         ResourceManagerImpl::addAssetToScene(mesh, m_FScene);
     }
