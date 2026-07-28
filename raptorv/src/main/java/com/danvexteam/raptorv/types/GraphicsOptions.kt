@@ -7,6 +7,7 @@ enum class DoFFilter { NONE, UNUSED, MEDIAN }
 enum class TAABoxType { AABB, AABB_VARIANCE }
 enum class TAABoxClipping { ACCURATE, CLAMP, NONE }
 enum class TAAJitterPattern { RGSS_X4, UNIFORM_HELIX_X4, HALTON_23_X8, HALTON_23_X16, HALTON_23_X32 }
+enum class AntiAliasingMode { NONE, FXAA }
 
 data class AmbientOcclusionOptions(
     var enabled: Boolean = false,
@@ -139,7 +140,15 @@ data class SoftShadowOptions(
     var penumbraRatioScale: Float = 1.0f
 )
 
-enum class ToneMappingMode { LINEAR, ACES, ACES_LEGACY, FILMIC }
+enum class ToneMappingMode {
+    LINEAR,
+    ACES,
+    ACES_LEGACY,
+    FILMIC,
+    AGX,
+    PBR_NEUTRAL,
+    DISPLAY_RANGE
+}
 
 data class ColorGradingOptions(
     var toneMapping: ToneMappingMode = ToneMappingMode.ACES,

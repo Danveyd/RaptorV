@@ -236,6 +236,11 @@ internal object RaptorNative {
     @JvmStatic external fun setSkyboxShowSun(sceneHandle: Long, showSun: Boolean)
     @JvmStatic external fun setViewFrontFaceWindingInverted(engineHandle: Long, inverted: Boolean)
 
+    @JvmStatic external fun setAntiAliasing(engineHandle: Long, mode: Int)
+    @JvmStatic external fun setNightAdaptation(engineHandle: Long, adaptation: Float)
+    @JvmStatic external fun setMSAAOptions(engineHandle: Long, enabled: Boolean, sampleCount: Int)
+    @JvmStatic external fun setMaterialSpecularAntiAliasing(sceneHandle: Long, entityId: Long, enabled: Boolean, variance: Float, threshold: Float)
+
     @JvmStatic external fun pickEntityAt(engineHandle: Long, x: Int, y: Int): Long
 
     @JvmStatic external fun createRenderTarget(engineHandle: Long, width: Int, height: Int): LongArray

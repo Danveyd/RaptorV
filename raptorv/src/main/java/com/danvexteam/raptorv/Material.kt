@@ -200,6 +200,10 @@ class Material internal constructor(
             minFilter.ordinal, magFilter.ordinal, wrapS.ordinal, wrapT.ordinal
         )
     }
+
+    fun setSpecularAntiAliasing(enabled: Boolean, variance: Float = 0.15f, threshold: Float = 0.2f) {
+        RaptorNative.setMaterialSpecularAntiAliasing(sceneHandle, entityId, enabled, variance, threshold)
+    }
 }
 
 inline fun Entity.material(block: Material.() -> Unit): Material {

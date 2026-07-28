@@ -3,6 +3,7 @@ package com.danvexteam.raptorv
 import android.content.Context
 import com.danvexteam.raptorv.internal.RaptorNative
 import com.danvexteam.raptorv.types.AmbientOcclusionOptions
+import com.danvexteam.raptorv.types.AntiAliasingMode
 import com.danvexteam.raptorv.types.BloomOptions
 import com.danvexteam.raptorv.types.CameraDesc
 import com.danvexteam.raptorv.types.ColorGradingOptions
@@ -105,6 +106,18 @@ class Engine(context: Context) : AutoCloseable {
 
     fun pickEntity(x: Int, y: Int): Long {
         return RaptorNative.pickEntityAt(handle, x, y)
+    }
+
+    fun setAntiAliasing(mode: AntiAliasingMode) {
+        RaptorNative.setAntiAliasing(handle, mode.ordinal)
+    }
+
+    fun setNightAdaptation(adaptation: Float) {
+        RaptorNative.setNightAdaptation(handle, adaptation)
+    }
+
+    fun setMSAA(enabled: Boolean, sampleCount: Int = 4) {
+        RaptorNative.setMSAAOptions(handle, enabled, sampleCount)
     }
 
     fun setAmbientOcclusion(opts: AmbientOcclusionOptions) {

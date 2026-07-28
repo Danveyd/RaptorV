@@ -162,6 +162,9 @@ static filament::LinearToneMapper s_LinearMapper;
 static filament::ACESToneMapper s_AcesMapper;
 static filament::ACESLegacyToneMapper s_AcesLegacyMapper;
 static filament::FilmicToneMapper s_FilmicMapper;
+static filament::AgxToneMapper s_AgxMapper;
+static filament::PBRNeutralToneMapper s_PbrNeutralMapper;
+static filament::DisplayRangeToneMapper s_DisplayRangeMapper;
 
 extern "C" {
 
@@ -687,6 +690,9 @@ Java_com_danvexteam_raptorv_internal_RaptorNative_setColorGradingOptions(
         case 1: mapper = &s_AcesMapper; break;
         case 2: mapper = &s_AcesLegacyMapper; break;
         case 3: mapper = &s_FilmicMapper; break;
+        case 4: mapper = &s_AgxMapper; break;
+        case 5: mapper = &s_PbrNeutralMapper; break;
+        case 6: mapper = &s_DisplayRangeMapper; break;
     }
 
     filament::ColorGrading* colorGrading = filament::ColorGrading::Builder()
@@ -2113,6 +2119,66 @@ Java_com_danvexteam_raptorv_internal_RaptorNative_pickEntityAt(
     if (!rendererImpl || !rendererImpl->getView()) return 0;
 
     return 0;
+}
+
+JNIEXPORT void JNICALL
+Java_com_danvexteam_raptorv_internal_RaptorNative_setAntiAliasing(
+        JNIEnv*, jclass, jlong engineHandle, jint mode) {
+
+    CHECK_ENGINE(engineHandle);
+    auto* rendererImpl = static_cast<RendererImpl*>(wrapper->engine->getRenderer());
+    if (rendererImpl && rendererImpl->getView()) {
+        rendererImpl->getView()->setAntiAliasing(static_cast<filament::View::AntiAliasing>(mode));
+    }
+}
+
+JNIEXPORT void JNICALL
+Java_com_danvexteam_raptorv_internal_RaptorNative_setNightAdaptation(
+        JNIEnv*, jclass, jlong engineHandle, jfloat adaptation) {
+
+    CHECK_ENGINE(engineHandle);
+    auto* rendererImpl = static_cast<RendererImpl*>(wrapper->engine->getRenderer());
+    if (!rendererImpl || !rendererImpl->getView()) return;
+
+    filament::Engine* fEngine = rendererImpl->engine();
+    filament::View* view = rendererImpl->getView();
+
+    filament::ColorGrading* colorGrading = filament::ColorGrading::Builder()
+            .nightAdaptation(adaptation)
+            .build(*fEngine);
+
+    auto* oldColorGrading = const_cast<filament::ColorGrading*>(view->getColorGrading());
+    view->setColorGrading(colorGrading);
+    if (oldColorGrading) fEngine->destroy(oldColorGrading);
+}
+
+JNIEXPORT void JNICALL
+Java_com_danvexteam_raptorv_internal_RaptorNative_setMSAAOptions(
+        JNIEnv*, jclass, jlong engineHandle, jboolean enabled, jint sampleCount) {
+
+    CHECK_ENGINE(engineHandle);
+    auto* rendererImpl = static_cast<RendererImpl*>(wrapper->engine->getRenderer());
+    if (!rendererImpl || !rendererImpl->getView()) return;
+
+    filament::MultiSampleAntiAliasingOptions msaa = rendererImpl->getView()->getMultiSampleAntiAliasingOptions();
+    msaa.enabled = enabled;
+    msaa.sampleCount = static_cast<uint8_t>(sampleCount);
+
+    rendererImpl->getView()->setMultiSampleAntiAliasingOptions(msaa);
+}
+
+JNIEXPORT void JNICALL
+Java_com_danvexteam_raptorv_internal_RaptorNative_setMaterialSpecularAntiAliasing(
+        JNIEnv*, jclass, jlong sceneHandle, jlong entityId, jboolean enabled, jfloat variance, jfloat threshold) {
+
+    auto* scenePtr = reinterpret_cast<std::shared_ptr<Scene>*>(sceneHandle);
+    if (!scenePtr || !*scenePtr) return;
+    auto* sceneImpl = static_cast<SceneImpl*>(scenePtr->get());
+
+    applyToMaterialInstances(sceneImpl, static_cast<EntityId>(entityId), [variance, threshold](filament::MaterialInstance* mi) {
+        mi->setSpecularAntiAliasingVariance(variance);
+        mi->setSpecularAntiAliasingThreshold(threshold);
+    });
 }
 
 } // extern "C"
