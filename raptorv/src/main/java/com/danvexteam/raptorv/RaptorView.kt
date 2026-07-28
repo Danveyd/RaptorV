@@ -18,7 +18,10 @@ class RaptorView @JvmOverloads constructor(
 
     var onTick: ((deltaTime: Float) -> Unit)? = null
 
-    init { holder.addCallback(this) }
+    init {
+        holder.addCallback(this)
+        holder.setFormat(android.graphics.PixelFormat.RGBA_8888)
+    }
 
     fun attachEngine(e: Engine) {
         this.engine = e

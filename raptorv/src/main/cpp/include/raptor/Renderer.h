@@ -7,8 +7,6 @@ namespace raptor {
     public:
         virtual ~Renderer() = default;
 
-        virtual void setRenderSettings(const RenderSettings& settings) = 0;
-
         virtual EntityId createCamera(const CameraDesc& desc) = 0;
         virtual void     setMainCamera(EntityId camera) = 0;
         virtual void     updateCamera(EntityId camera, const CameraDesc& desc) = 0;

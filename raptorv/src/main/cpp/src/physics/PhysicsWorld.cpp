@@ -11,6 +11,8 @@
 #include <Jolt/Physics/PhysicsSettings.h>
 #include <Jolt/Physics/PhysicsSystem.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/Shape/SphereShape.h>
+#include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, "RaptorPhysics", __VA_ARGS__)
@@ -90,10 +92,23 @@ namespace raptor {
         m_System->Update(dt, 1, m_TempAlloc, m_Jobs);
     }
 
-    uint32_t PhysicsWorld::createBoxBody(const Vec3& pos, const Vec3& he, float mass) {
+    uint32_t PhysicsWorld::createRigidBody(const Vec3& pos, int type, float arg1, float arg2, float arg3, float mass) {
         JPH::BodyInterface& bi = m_System->GetBodyInterface();
-        JPH::BoxShapeSettings boxShape(JPH::Vec3(he.x, he.y, he.z));
-        auto shape = boxShape.Create().Get();
+        JPH::ShapeRefC shape;
+
+        if (type == 0) { // Box
+            JPH::BoxShapeSettings boxShape(JPH::Vec3(arg1, arg2, arg3));
+            shape = boxShape.Create().Get();
+        } else if (type == 1) { // Sphere
+            JPH::SphereShapeSettings sphereShape(arg1);
+            shape = sphereShape.Create().Get();
+        } else if (type == 2) { // Capsule
+            JPH::CapsuleShapeSettings capsuleShape(arg1, arg2);
+            shape = capsuleShape.Create().Get();
+        } else {
+            JPH::BoxShapeSettings boxShape(JPH::Vec3(0.5f, 0.5f, 0.5f));
+            shape = boxShape.Create().Get();
+        }
 
         bool dynamic = mass > 0.0f;
         JPH::BodyCreationSettings settings(

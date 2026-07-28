@@ -23,6 +23,7 @@ add_library(raptorv SHARED ${SRC_FILES})
 
 find_library(log-lib log)
 find_library(android-lib android)
+find_library(jnigraphics-lib jnigraphics)
 
 target_link_libraries(raptorv
         -Wl,--start-group
@@ -31,6 +32,7 @@ target_link_libraries(raptorv
         -Wl,--end-group
         ${log-lib}
         ${android-lib}
+        ${jnigraphics-lib}
         EGL
         GLESv3
         z

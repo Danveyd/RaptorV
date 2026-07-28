@@ -9,42 +9,36 @@ import com.danvexteam.raptorv.Component
 import com.danvexteam.raptorv.Engine
 import com.danvexteam.raptorv.Entity
 import com.danvexteam.raptorv.RaptorView
-import com.danvexteam.raptorv.types.CameraDesc
-import com.danvexteam.raptorv.types.LightDesc
-import com.danvexteam.raptorv.types.LightType
-import com.danvexteam.raptorv.types.RenderSettings
-import com.danvexteam.raptorv.types.Transform
-import com.danvexteam.raptorv.types.Vec3
-import com.danvexteam.raptorv.types.Vec4
+import com.danvexteam.raptorv.pipeline.LumenConfig
+import com.danvexteam.raptorv.pipeline.enableLumenGI
+import com.danvexteam.raptorv.types.*
 import kotlin.math.cos
 import kotlin.math.sin
 
-class SubmarineRotator : Component() {
-    private var subRotationY = 0f
-
-    override fun onUpdate(deltaTime: Float) {
-        subRotationY += deltaTime * 1.0f
-        entity.setTransformRaw(
-            0f, 0f, 0f,           // Position
-            0f, subRotationY, 0f,  // Rotation
-            1f, 1f, 1f            // Scale
-        )
-    }
-}
-
-class CameraOrbitController(private val camera: Camera) : Component() {
+class StreetCameraController(
+    private val camera: Camera,
+    private val helmetEntity: Entity?
+) : Component() {
     private var angle = 0f
 
     override fun onUpdate(deltaTime: Float) {
-        angle += deltaTime * 0.5f
-        val camX = sin(angle.toDouble()).toFloat() * 12f
-        val camZ = -10f + cos(angle.toDouble()).toFloat() * 12f
+        angle += deltaTime * 0.2f
+
+        val camX = sin(angle.toDouble()).toFloat() * 2.0f
+        val camZ = cos(angle.toDouble()).toFloat() * 2.0f
+        val camY = 1.6f
 
         camera.updateRaw(
-            60f, 0.1f, 1000f,   // FOV, Near, Far
-            camX, 3f, camZ,       // Position (X, Y, Z)
-            0f, 0f, 0f,            // Target
-            0f, 1f, 0f            // Up vector
+            fov = 60f, near = 0.1f, far = 1000f,
+            px = camX + 9f, py = camY, pz = camZ,
+            tx = 9f, ty = 1.0f, tz = 0f,
+            ux = 0f, uy = 1f, uz = 0f
+        )
+
+        helmetEntity?.setTransformRaw(
+            px = 9f, py = 1.0f, pz = 0f,
+            rx = 0f, ry = angle * 0.8f, rz = 0f,
+            sx = 0.35f, sy = 0.35f, sz = 0.35f
         )
     }
 }
@@ -52,6 +46,9 @@ class CameraOrbitController(private val camera: Camera) : Component() {
 class MainActivity : AppCompatActivity() {
 
     private lateinit var engine: Engine
+
+    private var frameCount = 0
+    private var lastFpsTimestamp = System.currentTimeMillis()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,54 +58,118 @@ class MainActivity : AppCompatActivity() {
         engine = Engine(this)
         raptorView.attachEngine(engine)
 
-        val settings = RenderSettings(
-            clearColor = Vec4(0.0f, 0.0f, 0.02f, 1f)
+        raptorView.onTick = { deltaTime ->
+            frameCount++
+            val now = System.currentTimeMillis()
+            if (now - lastFpsTimestamp >= 1000) {
+                val fps = frameCount
+                frameCount = 0
+                lastFpsTimestamp = now
+                runOnUiThread { title = "Raptor V Next-Gen - $fps FPS" }
+                android.util.Log.i("RaptorV_FPS", "Real FPS: $fps | dt: ${(deltaTime * 1000).toInt()}ms")
+            }
+        }
+
+        engine.enableLumenGI(
+            LumenConfig(
+                giQuality = QualityLevel.HIGH,
+                enableSSR = true,
+                ssrThickness = 0.2f,
+                enableSSCT = true,
+                enableFSR = true,
+                fsrRenderScale = 0.45f,
+                fsrSharpness = 0.8f
+            )
         )
-        engine.setRenderSettings(settings)
+
+
+        engine.setColorGrading(
+            ColorGradingOptions(
+                toneMapping = ToneMappingMode.ACES,
+                exposure = 0.85f,
+                contrast = 1.22f,
+                vibrance = 1.15f,
+                whiteBalanceTemp = 0.05f
+            )
+        )
+
+        engine.setBloom(
+            BloomOptions(
+                enabled = true,
+                strength = 0.08f,
+                lensFlare = true
+            )
+        )
+
+        engine.setShadowType(ShadowType.PCF)
 
         val scene = engine.createScene()
         engine.setActiveScene(scene)
 
+        try {
+            scene.setEnvironment(
+                this,
+                iblPath = "default_env_ibl.ktx",
+                skyboxPath = "default_env_skybox.ktx"
+            )
+            scene.setIblIntensity(35000f)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
         val sunDesc = LightDesc(
-            type = LightType.Directional,
-            color = Vec3(1f, 0.95f, 0.9f),
+            type = LightType.Sun,
+            color = Vec3(1.0f, 0.95f, 0.85f),
             intensity = 110000f,
-            direction = Vec3(0.5f, -1f, -0.5f),
-            castShadows = true
+            direction = Vec3(-0.6f, -0.8f, -0.4f).normalize(),
+            castShadows = true,
+            shadowCascades = 1,
+            shadowMapSize = 2048
         )
         engine.createLight(sunDesc)
 
-        val ambientDesc = LightDesc(
-            type = LightType.Directional,
-            color = Vec3(0.4f, 0.6f, 0.9f),
-            intensity = 20000f,
-            direction = Vec3(-0.5f, 1f, 0.5f),
-            castShadows = false
+        val camera = engine.createCamera(
+            CameraDesc(
+                position = Vec3(9f, 1.6f, 2.0f),
+                target = Vec3(9f, 1.0f, 0f)
+            )
         )
-        engine.createLight(ambientDesc)
-
-        val camDesc = CameraDesc(
-            position = Vec3(0f, 3f, 8f),
-            target = Vec3(0f, 0f, 0f)
-        )
-        val camera = engine.createCamera(camDesc)
         camera.makeMain()
 
-        val cameraControllerEntity = scene.createEntity("CameraController")
-        cameraControllerEntity.addScript(CameraOrbitController(camera))
-
         Handler(Looper.getMainLooper()).postDelayed({
-            val meshId = engine.loadMesh("atlantic_explorer_submarineglb.glb")
+            val streetMeshId = engine.loadMesh("after_the_rain..._-_vr__sound.glb")
+            if (streetMeshId != 0L) {
+                val streetEntity = scene.createEntity("StreetLevel")
+                streetEntity.attachMesh(streetMeshId)
+                streetEntity.transform = Transform(
+                    position = Vec3(0f, 0f, 0f),
+                    scale = Vec3(1.0f, 1.0f, 1.0f)
+                )
+                streetEntity.receiveShadows = true
+                streetEntity.castShadows = false
+            }
 
-            val playerEntity = scene.createEntity("Player")
-            playerEntity.attachMesh(meshId)
-            playerEntity.transform = Transform(position = Vec3(0f, 0f, 0f))
+            var helmetMeshId = engine.loadMesh("DamagedHelmet.glb")
+            if (helmetMeshId == 0L) {
+                helmetMeshId = engine.loadMesh("ClearCoatCarPaint.glb")
+            }
 
-            playerEntity.material.baseColor = Vec3(1.0f, 0.0f, 0.0f)
-            playerEntity.material.roughness = 0.15f
-            playerEntity.material.metallic = 1.0f
+            var heroHelmet: Entity? = null
+            if (helmetMeshId != 0L) {
+                heroHelmet = scene.createEntity("HeroHelmet")
+                heroHelmet.attachMesh(helmetMeshId)
+                heroHelmet.transform = Transform(
+                    position = Vec3(9f, 1.0f, 0f),
+                    scale = Vec3(0.35f, 0.35f, 0.35f)
+                )
+                heroHelmet.castShadows = true
+                heroHelmet.receiveShadows = true
+            }
 
-            playerEntity.addScript(SubmarineRotator())
+            heroHelmet?.material?.emissiveColor = Vec4(5.0f, 0.0f, 0.0f, 1.0f)
+
+            val controllerEntity = scene.createEntity("CameraController")
+            controllerEntity.addScript(StreetCameraController(camera, heroHelmet))
         }, 500)
     }
 
@@ -117,3 +178,4 @@ class MainActivity : AppCompatActivity() {
         engine.close()
     }
 }
+

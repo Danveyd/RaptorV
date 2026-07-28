@@ -8,6 +8,7 @@
 #include <filament/Camera.h>
 #include <filament/Scene.h>
 #include <utils/Entity.h>
+#include <vector>
 
 namespace raptor {
 
@@ -18,7 +19,6 @@ namespace raptor {
         RendererImpl();
         ~RendererImpl() override;
 
-        void     setRenderSettings(const RenderSettings& s) override;
         EntityId createCamera(const CameraDesc& desc) override;
         void     setMainCamera(EntityId camera) override;
         void     updateCamera(EntityId camera, const CameraDesc& desc) override;
@@ -30,12 +30,22 @@ namespace raptor {
         void onSurfaceDestroyed();
         void renderFrame();
 
+        void addOffscreenView(filament::View* view) {
+            m_OffscreenViews.push_back(view);
+        }
+        void removeOffscreenView(filament::View* view) {
+            auto it = std::find(m_OffscreenViews.begin(), m_OffscreenViews.end(), view);
+            if (it != m_OffscreenViews.end()) {
+                m_OffscreenViews.erase(it);
+            }
+        }
+
         void              bindActiveScene(SceneImpl* scene);
         filament::Engine* engine() { return m_Engine; }
+        filament::View*   getView() { return m_View; }
+        SceneImpl* getActiveScene() const { return m_ActiveScene; }
 
     private:
-        void applySettings(const RenderSettings& s);
-
         filament::Engine*     m_Engine    = nullptr;
         filament::Renderer*   m_Renderer  = nullptr;
         filament::SwapChain*  m_SwapChain = nullptr;
@@ -47,8 +57,9 @@ namespace raptor {
         filament::Camera*     m_DefaultCamera = nullptr;
         EntityId              m_MainCameraId  = INVALID_ENTITY;
 
+        std::vector<filament::View*> m_OffscreenViews;
+
         int                   m_Width  = 0;
         int                   m_Height = 0;
-        RenderSettings        m_Settings;
     };
 }

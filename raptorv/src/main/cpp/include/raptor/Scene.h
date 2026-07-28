@@ -17,5 +17,9 @@ namespace raptor {
 
         virtual void attachMesh     (EntityId id, MeshHandle mesh) = 0;
         virtual void attachRigidBody(EntityId id, const RigidBodyDesc& desc) = 0;
+
+        virtual void setIndirectLightIntensity(float intensity) = 0;
+
+        virtual void setIndirectLightRotation(float rotationY) = 0;
     };
 }

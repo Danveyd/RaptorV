@@ -1,6 +1,8 @@
 #pragma once
 #include <string>
+#include <vector>
 #include <utils/Entity.h>
+#include <filament/MaterialInstance.h>
 #include "raptor/Types.h"
 
 namespace raptor::components {
@@ -16,6 +18,7 @@ namespace raptor::components {
     struct MeshC {
         utils::Entity rootEntity;
         MeshHandle meshHandle = INVALID_MESH;
+        std::vector<filament::MaterialInstance*> materialInstances;
     };
 
     struct RigidBodyC {
