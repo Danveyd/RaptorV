@@ -91,14 +91,6 @@ class Scene internal constructor(
         }
     }
 
-    fun setIblIntensity(intensity: Float) {
-        this.iblIntensity = intensity
-    }
-
-    fun setIblRotation(rotationY: Float) {
-        this.iblRotation = rotationY
-    }
-
     fun setSkyboxCubemap(bitmaps: Array<Bitmap>, intensity: Float = 15000.0f) {
         val cubemapTexture = Texture.cubemapFromBitmaps(engine, bitmaps)
         RaptorNative.setSkyboxTexture(handle, cubemapTexture.handle, intensity)

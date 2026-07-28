@@ -9,6 +9,7 @@ import com.danvexteam.raptorv.Component
 import com.danvexteam.raptorv.Engine
 import com.danvexteam.raptorv.Entity
 import com.danvexteam.raptorv.RaptorView
+import com.danvexteam.raptorv.material
 import com.danvexteam.raptorv.pipeline.LumenConfig
 import com.danvexteam.raptorv.pipeline.enableLumenGI
 import com.danvexteam.raptorv.types.*
@@ -28,11 +29,9 @@ class StreetCameraController(
         val camZ = cos(angle.toDouble()).toFloat() * 2.0f
         val camY = 1.6f
 
-        camera.updateRaw(
-            fov = 60f, near = 0.1f, far = 1000f,
+        camera.lookAt(
             px = camX + 9f, py = camY, pz = camZ,
-            tx = 9f, ty = 1.0f, tz = 0f,
-            ux = 0f, uy = 1f, uz = 0f
+            tx = 9f, ty = 1.0f, tz = 0f
         )
 
         helmetEntity?.setTransformRaw(
@@ -82,7 +81,6 @@ class MainActivity : AppCompatActivity() {
             )
         )
 
-
         engine.setColorGrading(
             ColorGradingOptions(
                 toneMapping = ToneMappingMode.ACES,
@@ -112,7 +110,8 @@ class MainActivity : AppCompatActivity() {
                 iblPath = "default_env_ibl.ktx",
                 skyboxPath = "default_env_skybox.ktx"
             )
-            scene.setIblIntensity(35000f)
+            scene.iblIntensity = 35000f
+            scene.showSunOnSkybox = true
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -141,10 +140,8 @@ class MainActivity : AppCompatActivity() {
             if (streetMeshId != 0L) {
                 val streetEntity = scene.createEntity("StreetLevel")
                 streetEntity.attachMesh(streetMeshId)
-                streetEntity.transform = Transform(
-                    position = Vec3(0f, 0f, 0f),
-                    scale = Vec3(1.0f, 1.0f, 1.0f)
-                )
+                streetEntity.position = Vec3(0f, 0f, 0f)
+                streetEntity.scale = Vec3(1.0f, 1.0f, 1.0f)
                 streetEntity.receiveShadows = true
                 streetEntity.castShadows = false
             }
@@ -158,15 +155,15 @@ class MainActivity : AppCompatActivity() {
             if (helmetMeshId != 0L) {
                 heroHelmet = scene.createEntity("HeroHelmet")
                 heroHelmet.attachMesh(helmetMeshId)
-                heroHelmet.transform = Transform(
-                    position = Vec3(9f, 1.0f, 0f),
-                    scale = Vec3(0.35f, 0.35f, 0.35f)
-                )
+                heroHelmet.position = Vec3(9f, 1.0f, 0f)
+                heroHelmet.scale = Vec3(0.35f, 0.35f, 0.35f)
                 heroHelmet.castShadows = true
                 heroHelmet.receiveShadows = true
-            }
 
-            heroHelmet?.material?.emissiveColor = Vec4(5.0f, 0.0f, 0.0f, 1.0f)
+                heroHelmet.material {
+                    emissiveColor = Vec4(5.0f, 0.0f, 0.0f, 1.0f)
+                }
+            }
 
             val controllerEntity = scene.createEntity("CameraController")
             controllerEntity.addScript(StreetCameraController(camera, heroHelmet))
@@ -178,4 +175,3 @@ class MainActivity : AppCompatActivity() {
         engine.close()
     }
 }
-

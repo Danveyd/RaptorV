@@ -163,8 +163,27 @@ namespace raptor {
             m_SkyboxTexture = ktxreader::Ktx1Reader::createTexture(m_FEngine, m_SkyboxBundle, false);
             m_Skybox = filament::Skybox::Builder()
                     .environment(m_SkyboxTexture)
+                    .showSun(m_ShowSun)
                     .build(*m_FEngine);
 
+            m_FScene->setSkybox(m_Skybox);
+        }
+    }
+
+    void SceneImpl::setSkyboxShowSun(bool showSun) {
+        m_ShowSun = showSun;
+        if (!m_FEngine || !m_FScene) return;
+
+        if (m_SkyboxTexture) {
+            filament::Skybox* newSkybox = filament::Skybox::Builder()
+                    .environment(m_SkyboxTexture)
+                    .showSun(m_ShowSun)
+                    .build(*m_FEngine);
+
+            auto* oldSkybox = m_FScene->getSkybox();
+            if (oldSkybox) m_FEngine->destroy(oldSkybox);
+
+            m_Skybox = newSkybox;
             m_FScene->setSkybox(m_Skybox);
         }
     }

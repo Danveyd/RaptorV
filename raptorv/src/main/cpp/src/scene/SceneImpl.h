@@ -34,6 +34,7 @@ namespace raptor {
 
         void setIndirectLightRotation(float rotationY) override;
         void setIndirectLightRotation3D(float rx, float ry, float rz);
+        void setSkyboxShowSun(bool showSun);
 
         void update(float deltaTime);
         entt::registry& registry() { return m_Registry; }
@@ -54,5 +55,6 @@ namespace raptor {
         image::Ktx1Bundle* m_SkyboxBundle = nullptr;
         float* m_TransformBuffer = nullptr;
         size_t m_TransformBufferSize = 0;
+        bool m_ShowSun = false;
     };
 }

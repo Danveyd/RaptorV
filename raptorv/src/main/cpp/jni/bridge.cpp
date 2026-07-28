@@ -480,40 +480,6 @@ Java_com_danvexteam_raptorv_internal_RaptorNative_setDitheringEnabled(
 }
 
 JNIEXPORT void JNICALL
-Java_com_danvexteam_raptorv_internal_RaptorNative_setBloomOptions(
-        JNIEnv*, jclass, jlong engineHandle,
-        jboolean enabled, jfloat strength, jint resolution, jint levels, jint blendMode,
-        jboolean threshold, jfloat highlight, jint quality, jboolean lensFlare, jboolean starburst,
-        jfloat chromaticAberration, jint ghostCount, jfloat ghostSpacing, jfloat ghostThreshold,
-        jfloat haloThickness, jfloat haloRadius, jfloat haloThreshold, jfloat dirtStrength) {
-
-    auto* wrapper = reinterpret_cast<EngineWrapper*>(engineHandle);
-    auto* rendererImpl = static_cast<RendererImpl*>(wrapper->engine->getRenderer());
-
-    filament::BloomOptions bloom;
-    bloom.enabled = enabled;
-    bloom.strength = strength;
-    bloom.resolution = resolution;
-    bloom.levels = levels;
-    bloom.blendMode = static_cast<filament::BloomOptions::BlendMode>(blendMode);
-    bloom.threshold = threshold;
-    bloom.highlight = highlight;
-    bloom.quality = static_cast<filament::QualityLevel>(quality);
-    bloom.lensFlare = lensFlare;
-    bloom.starburst = starburst;
-    bloom.chromaticAberration = chromaticAberration;
-    bloom.ghostCount = ghostCount;
-    bloom.ghostSpacing = ghostSpacing;
-    bloom.ghostThreshold = ghostThreshold;
-    bloom.haloThickness = haloThickness;
-    bloom.haloRadius = haloRadius;
-    bloom.haloThreshold = haloThreshold;
-    bloom.dirtStrength = dirtStrength;
-
-    rendererImpl->getView()->setBloomOptions(bloom);
-}
-
-JNIEXPORT void JNICALL
 Java_com_danvexteam_raptorv_internal_RaptorNative_setTemporalAntiAliasingOptions(
         JNIEnv*, jclass, jlong engineHandle,
         jboolean enabled, jfloat feedback, jfloat lodBias, jfloat sharpness, jfloat upscaling,
@@ -640,10 +606,11 @@ Java_com_danvexteam_raptorv_internal_RaptorNative_setScreenSpaceReflectionsOptio
         JNIEnv*, jclass, jlong engineHandle,
         jboolean enabled, jfloat thickness, jfloat bias, jfloat maxDistance, jfloat stride) {
 
-    auto* wrapper = reinterpret_cast<EngineWrapper*>(engineHandle);
+    CHECK_ENGINE(engineHandle);
     auto* rendererImpl = static_cast<RendererImpl*>(wrapper->engine->getRenderer());
+    if (!rendererImpl || !rendererImpl->getView()) return;
 
-    filament::ScreenSpaceReflectionsOptions ssr;
+    filament::ScreenSpaceReflectionsOptions ssr = rendererImpl->getView()->getScreenSpaceReflectionsOptions();
     ssr.enabled = enabled;
     ssr.thickness = thickness;
     ssr.bias = bias;
@@ -651,6 +618,33 @@ Java_com_danvexteam_raptorv_internal_RaptorNative_setScreenSpaceReflectionsOptio
     ssr.stride = stride;
 
     rendererImpl->getView()->setScreenSpaceReflectionsOptions(ssr);
+}
+
+JNIEXPORT void JNICALL
+Java_com_danvexteam_raptorv_internal_RaptorNative_setBloomOptions(
+        JNIEnv*, jclass, jlong engineHandle,
+        jboolean enabled, jfloat strength, jint resolution, jint levels, jint blendMode,
+        jboolean threshold, jfloat highlight, jint quality, jboolean lensFlare, jboolean starburst,
+        jfloat chromaticAberration, jint ghostCount, jfloat ghostSpacing, jfloat ghostThreshold,
+        jfloat haloThickness, jfloat haloRadius, jfloat haloThreshold, jfloat dirtStrength) {
+
+    CHECK_ENGINE(engineHandle);
+    auto* rendererImpl = static_cast<RendererImpl*>(wrapper->engine->getRenderer());
+    if (!rendererImpl || !rendererImpl->getView()) return;
+
+    filament::BloomOptions bloom = rendererImpl->getView()->getBloomOptions();
+    bloom.enabled = enabled;
+    bloom.strength = strength;
+    bloom.resolution = resolution;
+    bloom.levels = levels;
+    bloom.blendMode = static_cast<filament::BloomOptions::BlendMode>(blendMode);
+    bloom.threshold = threshold;
+    bloom.highlight = highlight;
+    bloom.quality = static_cast<filament::QualityLevel>(quality);
+    bloom.lensFlare = lensFlare;
+    bloom.starburst = starburst;
+
+    rendererImpl->getView()->setBloomOptions(bloom);
 }
 
 JNIEXPORT void JNICALL
@@ -2094,18 +2088,7 @@ Java_com_danvexteam_raptorv_internal_RaptorNative_setSkyboxShowSun(
     if (!scenePtr || !*scenePtr) return;
     auto* sceneImpl = static_cast<SceneImpl*>(scenePtr->get());
 
-    filament::Engine* fEngine = sceneImpl->filamentEngine();
-    filament::Scene* fScene = sceneImpl->filamentScene();
-    if (!fEngine || !fScene) return;
-
-    filament::Skybox* skybox = filament::Skybox::Builder()
-            .showSun(showSun)
-            .build(*fEngine);
-
-    auto* oldSkybox = fScene->getSkybox();
-    if (oldSkybox) fEngine->destroy(oldSkybox);
-
-    fScene->setSkybox(skybox);
+    sceneImpl->setSkyboxShowSun(showSun);
 }
 
 JNIEXPORT void JNICALL
@@ -2123,7 +2106,9 @@ JNIEXPORT jlong JNICALL
 Java_com_danvexteam_raptorv_internal_RaptorNative_pickEntityAt(
         JNIEnv*, jclass, jlong engineHandle, jint x, jint y) {
 
-    CHECK_ENGINE(engineHandle);
+    auto* wrapper = reinterpret_cast<EngineWrapper*>(engineHandle);
+    if (!wrapper || reinterpret_cast<uintptr_t>(wrapper) < 0x10000 || !wrapper->engine) return 0;
+
     auto* rendererImpl = static_cast<RendererImpl*>(wrapper->engine->getRenderer());
     if (!rendererImpl || !rendererImpl->getView()) return 0;
 

@@ -172,11 +172,6 @@ class Entity internal constructor(private val scene: Scene, val id: Long) {
         RaptorNative.setMorphTargetWeights(scene.handle, id, weights)
     }
 
-    fun getRotation(): Vec3 {
-        val rot = RaptorNative.getTransformRotation(scene.handle, id)
-        return Vec3(rot[0], rot[1], rot[2])
-    }
-
     fun setMaterialParamAt(primitiveIndex: Int, paramName: String, value: Float) {
         RaptorNative.setEntityMaterialParamAt(scene.handle, id, primitiveIndex, paramName, value)
     }

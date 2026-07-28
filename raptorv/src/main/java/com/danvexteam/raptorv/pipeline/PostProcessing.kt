@@ -93,12 +93,41 @@ class SSRScope {
     )
 }
 
+class DynamicResolutionScope {
+    var enabled: Boolean = true
+    var scale: Float = 0.5f
+    var sharpness: Float = 0.8f
+    var quality: QualityLevel = QualityLevel.ULTRA
+
+    internal fun build(): DynamicResolutionOptions = DynamicResolutionOptions(
+        enabled = enabled,
+        homogeneousScaling = true,
+        minScale = Vec2(scale, scale),
+        maxScale = Vec2(1.0f, 1.0f),
+        sharpness = sharpness,
+        quality = quality
+    )
+}
+
 class PostProcessingScope {
     private var bloomScope: BloomScope? = null
     private var aoScope: AmbientOcclusionScope? = null
     private var fogScope: FogScope? = null
     private var colorGradingScope: ColorGradingScope? = null
     private var ssrScope: SSRScope? = null
+    private var dynamicResScope: DynamicResolutionScope? = null
+
+    fun fsr(scale: Float = 0.5f, sharpness: Float = 0.8f) {
+        dynamicResScope = DynamicResolutionScope().apply {
+            this.enabled = true
+            this.scale = scale
+            this.sharpness = sharpness
+        }
+    }
+
+    fun dynamicResolution(block: DynamicResolutionScope.() -> Unit) {
+        dynamicResScope = DynamicResolutionScope().apply(block)
+    }
 
     fun bloom(block: BloomScope.() -> Unit) {
         bloomScope = BloomScope().apply(block)
@@ -126,6 +155,7 @@ class PostProcessingScope {
         fogScope?.let { engine.setFog(it.build()) }
         colorGradingScope?.let { engine.setColorGrading(it.build()) }
         ssrScope?.let { engine.setSSR(it.build()) }
+        dynamicResScope?.let { engine.setDynamicResolution(it.build()) }
     }
 }
 
